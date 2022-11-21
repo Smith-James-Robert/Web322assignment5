@@ -1,0 +1,141 @@
+<!doctype html>
+<html>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-iYQeCzEYFbKjA/T2uDLTpkwGzCiq6soy8tYaI1GyVh/UjpbCx/TYkiZhlZB6+fzT" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-u1OknCvxWvY5kfmNBILK2hRnQC3Pr17a+RTT6rIHI7NnikvbZlHgTPOOmMi466C8" crossorigin="anonymous"></script>
+<head>
+  <title>Register an Account</title>
+</head>
+
+<body class="text-bg-dark">
+    <header class="p-3 text-bg-dark border-bottom">
+        <div class="container">
+          <div class="d-flex flex-wrap align-items-center justify-content-center justify-content-lg-start">
+            <img src="iconsmall.png" class="img:fluid" alt="green slitted eye">
+            <!--<a href="/" class="d-flex align-items-center mb-2 mb-lg-0 text-white text-decoration-none">
+              <svg class="bi me-2" width="40" height="32" role="img" aria-label="Bootstrap"><use xlink:href="#bootstrap"/></svg>
+            </a>
+        --><div class="row text-center">
+            <h1>Web322 James Smith Blog</h1>
+        </div>
+        <div class="row">
+            <div class="col">
+            <ul class="nav col-12 col-lg-auto me-lg-auto mb-2 justify-content-center mb-md-0">
+                <li><a href='/blog'  class="nav-link px-2 text-white">Blog</a></li>
+              <li><a href='/registration'  class="nav-link px-2 text-white">Sign Up</a></li>
+            <li><a href='/login'  class="nav-link px-2 text-white">Log In</a></li>
+            </ul>
+          </div>
+          </div>
+        </header>
+        <div class="row justify-content-md-center align-items-center">
+          <div class="col-6 align-self-center text-center border">
+    <form action="/registration" method="POST" enctype="application/x-www-form-urlencoded">
+        <h2>Create an Account</h2>
+        <h4>Personal Information</h4>
+        <div class="mb-3">
+            {{#if data.validFirst}}
+            <input type="text" class="form-control is-invalid" name="firstName" id="firstName" placeholder="First Name" value={{data.FirstName}}>
+            <div class="invalid-feedback">
+              You must enter your name!
+            </div>
+            {{else}}
+            <input type="text" class="form-control" name="firstName" id="firstName" placeholder="First Name" value={{data.FirstName}}>
+            {{/if}}
+
+          </div>
+          
+        <div class="mb-3">
+            {{#if data.validLast}}
+            <input type="text" class="form-control is-invalid" name="lastName" id="lastName" placeholder="Last Name" value={{data.LastName}}>
+            <div class="invalid-feedback">You must enter a last name.</div>
+            {{else}}
+            <input type="text" class="form-control" name="lastName" id="lastName" placeholder="Last Name" value={{data.LastName}}>
+            {{/if}}
+          </div>
+        <div class="mb-3">
+          {{#if data.emailError}}       
+             <input type="email" class="form-control is-invalid" name="email" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Email Address" value={{data.emailAddress}}>
+          <div class="invalid-feedback">That email address already exists!</div>
+          {{else}}
+            {{#if data.validEmail}}
+          <input type="email" class="form-control is-invalid" name="email" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Email Address" value={{data.emailAddress}}>
+          <div class="invalid-feedback">Email address must have an @</div>
+
+            {{else}}
+          <input type="email" class="form-control" name="email" id="exampleInputEmail1" aria-describedby="emailHelp" placeholder="Email Address" value={{data.emailAddress}}>
+            {{/if}}
+            {{/if}}
+        </div>
+        <div class="mb-3">
+            {{#if data.validPhone}}
+            <input type="number" class="form-control is-invalid" name ="phone" id="phoneNumber" placeholder="Phone Number" value={{data.phoneNum}}>
+            <div class="invalid-feedback">Phone number must be 10 digits long.</div>
+            {{else}}
+            <input type="number" class="form-control" name ="phone" id="phoneNumber" placeholder="Phone Number" value={{data.phoneNum}}>
+            {{/if}}
+          </div>
+        <h4>Billing Address</h4>
+        <div class="mb-3">
+            <input type="text" class="form-control" name ="companyName" id="companyName" placeholder="Company Name(optional)">
+          </div>
+          
+        <div class="mb-3">
+            <input type="text" class="form-control" name="address1" id="streetAdress" placeholder="Street Address(optional)">
+          </div>
+
+          
+        <div class="mb-3">
+            <input type="text" class="form-control" name="address2" id="address2" placeholder="Address 2(optional)">
+          </div>
+          <h4>Login Details</h4>
+          <div class="mb-3">
+            {{#if data.usernameError}}
+            <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control is-invalid" name="username" id="username" placeholder="Username" value={{data.user}}>
+            <div class="invalid-feedback">Username already exists</div>
+            {{else}}
+                {{#if data.validUser}}
+              <label for="username" class="form-label">Username</label>
+              <input type="text" class="form-control is-invalid" name="username" id="username" placeholder="Username" value={{data.user}}>
+              <div class="invalid-feedback">Username must not contain special characters</div>
+               {{else}}
+           <label for="username" class="form-label">Username</label>
+            <input type="text" class="form-control" name="username" id="username" placeholder="Username" value="{{data.user}}">
+          {{/if}}
+                      {{/if}}
+        </div>
+        <div class="mb-3">
+            {{#if data.validPass}}
+          <label for="exampleInputPassword1" class="form-label">Password</label>
+          <input type="password" name="password" class="form-control is-invalid" id="exampleInputPassword1" value={{data.pass}}>
+          <div class="invalid-feedback">Password must be at least 8 characters and contain at least one special character.</div>
+            {{else}}
+          <label for="exampleInputPassword1" class="form-label">Password</label>
+          <input type="password" name="password" class="form-control" id="exampleInputPassword1" value={{data.pass}}>
+          {{/if}}
+        </div>
+        <div class="mb-3 form-check">
+          <input type="checkbox"  class="form-check-input" id="exampleCheck1">
+          <label class="form-check-label" for="exampleCheck1">Check me out</label>
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+      </div></div>
+      {{data.username}}
+</body>
+      <footer class="d-flex flex-wrap justify-content-between align-items-center py-3 my-4 border-top">
+        <div class="col-md-4 d-flex align-items-center">
+          <a href="/" class="mb-3 me-2 mb-md-0 text-muted text-decoration-none lh-1">
+            <svg class="bi" width="30" height="24"><use xlink:href="#bootstrap"/></svg>
+          </a>
+          <span class="mb-3 mb-md-0 text-muted">&copy; 2022 James Web 322, Inc</span>
+        </div>
+    
+        <ul class="nav col-md-4 justify-content-end list-unstyled d-flex">
+        <a href="/twitter"><img src=/twitter style="width:42px;height:42px"></a>
+          <li class="ms-3"><a class="text-muted" href="#"><svg class="bi" width="24" height="24"><use xlink:href="#twitter"/></svg></a></li>
+          <li class="ms-3"><a class="text-muted" href="#"><svg class="bi" width="24" height="24"><use xlink:href="#instagram"/></svg></a></li>
+          <li class="ms-3"><a class="text-muted" href="#"><svg class="bi" width="24" height="24"><use xlink:href="#facebook"/></svg></a></li>
+        </ul>
+      </footer>
+</html>
