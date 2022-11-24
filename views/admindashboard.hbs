@@ -34,6 +34,47 @@
             <p>Your username is: {{data.FirstName}}</p>
             <p>Your email is: {{data.emailAddress}}</p>
             <br>
+            
+            <form action="/addFile" method="POST" enctype="multipart/form-data">
+            <h3>Add Article</h3>
+        <label for="photo">Article Title</label>
+        <input id="title" type="text" name="title"/><br/>
+        <label for="photo">Date</label>
+        <input id="date" type="date" name="date"/><br/>
+         <label for="photo">Content</label>
+        <input id="content" type="textarea" name="content"/><br/>
+         <label for="photo">Article Image</label>
+        <input id="photo" type="file" name="photo"/><br />
+        <input type="submit" value="Submit File" />
+            </form>
+            <form action="/viewFiles" method="POST" enctype="multipart/form-data">
+              <h3>View list of All Articles</h3>
+              <input type="submit" value="View List">
+            </form>
+        {{#each articles}}
+        <tr>
+          <td>ID:{{id}}<br>
+          Article Title:{{title}}
+          </td>
+        </tr>
+        <br>
+        {{else}}
+
+        {{/each}}
+        <br>
+        <form action="/updateFile" method="POST" enctype="application/x-www-form-urlencoded">
+        <label for="id">ID</label>
+        <input id="id" type="text" name="id"/><br/>
+        <label for="title">Article Title</label>
+        <input id="title" type="text" name="title"/><br/>
+        <label for="date">Date</label>
+        <input id="date" type="date" name="date"/><br/>
+         <label for="content">Content</label>
+        <input id="content" type="textarea" name="content"/><br/>
+        <label for="image">Image Name</label>
+        <input id="image" type="text" name="image"/><br>
+          <input type="submit" value="Update Article">
+        </form>
             </div>
           </div>
 </body>

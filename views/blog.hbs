@@ -38,7 +38,7 @@
         <div class="row g-2 justify-content-between">
           <div class="col-8">
             <div class="p-10 border">
-            <img src="iconsmall.png" class="img:fluid" alt="green slitted eye">
+            <img src="iconsmall.png" class="img:fluid" alt="green slitted eye" width="128" height="128">
             <h3>{{headline.title}}</h3>
             {{headline.article}}
             <a class="btn btn-primary" href="/article/1" role="button">Read More</a>    
@@ -56,10 +56,10 @@
         {{#each data}}
           <div class="col-4">
             <div class="p-10 border">
-            <img src="iconsmall.png" class="img:fluid" alt="green slitted eye">
+            <img src={{imageName}} class="img:fluid" alt="green slitted eye" width="128" height="128">
             <h3>{{title}}</h3>   
             {{article}}
-            <a class="btn btn-primary" href="/article/2" role="button">Read More</a>
+            <a class="btn btn-primary" href={{id}} role="button">Read More</a>
             </div>
         </div>
         {{#if lineBreak}}
