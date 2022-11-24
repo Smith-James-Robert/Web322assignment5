@@ -10,7 +10,52 @@ var qs = require('qs');
 const exphbs = require('express-handlebars');
 const mongoose = require('mongoose');
 var hash=require('object-hash'); // This is apparently not a very good hash but I don't know how to implment any others and couldn't find that information in the course notes.
+const clientSessions= require("client-sessions");
+const { nextTick } = require("process");
 
+app.use(express.urlencoded({ extended: true }));
+
+const storage = multer.diskStorage({
+    destination: "./images/",
+    filename: function (req, file, cb) {
+      // we write the filename as the current date down to the millisecond
+      // in a large web service this would possibly cause a problem if two people
+      // uploaded an image at the exact same time. A better way would be to use GUID's for filenames.
+      // this is a simple example.
+     /* if (path.extname(file.originalname)==".png" || path.extname(file.originalname)=="jpg" || path.extname(file.originalname)=="gif")
+      {
+      cb(null, Date.now() + path.extname(file.originalname));
+      }
+      else
+      {
+            cb(null,false);
+      }
+      */
+    // console.log(file.originalname);
+    cb(null,file.originalname);
+     //cb(null, Date.now() + path.extname(file.originalname));
+    }
+  });
+  
+  // tell multer to use the diskStorage function for naming files instead of the default.
+  var upload = multer({ //multer settings
+    storage: storage,
+    fileFilter: function (req, file, callback) {
+        var ext = path.extname(file.originalname);
+        if(ext !== '.png' && ext !== '.jpg' && ext !== '.gif' && ext !== '.jpeg') {
+            //return callback(new Error('Only images are allowed'))
+            return callback(null,false);
+        }
+        callback(null, true)
+    }
+})
+app.use(clientSessions({
+    cookieName:"testCookie",
+    secret:"21",
+    duration:10*60*1000,
+    activeDuration:3*60*1000
+    
+    }));
 console.log(hash('admin'));
 console.log(hash('Peter'));
 console.log(hash('peter'));
@@ -55,6 +100,7 @@ var accountSchema = new Schema({
 var blogSchema = new Schema ({
     "title":String,
     "article":String,
+    "imageName":String,
     "id":{
         "type":Number,
         "unique":true
@@ -62,7 +108,9 @@ var blogSchema = new Schema ({
 })
 var articleSchema = new Schema ({
     "title":String,
+    "createdDate":Date,
     "article":String,
+    "imageName":String,
     "id":{
         "type":Number,
         "unique":true
@@ -98,6 +146,7 @@ app.get("/blog", function(req,res){
         //In actual production you'd probably want to select the headline seperately and then find the ids for the ones that you want for other articles.
         for (var i=0;i<someData.length;i++)
         {
+            
             if (someData[i].id%2)
             {
                 someData[i].lineBreak=true;
@@ -106,6 +155,8 @@ app.get("/blog", function(req,res){
             {
                 someData[i].lineBreak=false;
             }
+            someData[i].id="/article/"+someData[i].id;
+            someData[i].imageName="../images/"+someData[i].imageName;
         }
         res.render('blog',{
             data:someData,
@@ -131,7 +182,6 @@ app.get("/dashboard",function (req,res){
    //res.render('dashboard',{
   //  layout:false
 //});
-console.log("apple");
 res.redirect('/blog');
 })
 app.post("/login",function(req,res){
@@ -141,22 +191,13 @@ app.post("/login",function(req,res){
  var username=req.body.username;
  var userName=username;
  var password=req.body.password;
- console.log(password);
  var passWord=password;
- console.log(passWord);
  var someData;
-// console.log(userName);
 Account.findOne({
 user:userName,
 pass:hash(passWord)
 }).exec().then((accounts)=>
 {
-    //someData=accounts.map(value=>value.toObject());
-//console.log(accounts);
-   // console.log(accounts.user);
-   // console.log(userName);
-   // console.log(accounts.pass);
-   // console.log(passWord);
    if (accounts!=null)
 {
 
@@ -168,19 +209,31 @@ someData={
 }
 if(accounts.admin)
 {
+    req.testCookie.userInfo={
+        admin:true,
+        user:accounts.user,
+        emailAddress:accounts.emailAddress,
+        FirstName:accounts.fName,
+        LastName:accounts.lName
+    }
     res.render('admindashboard',{
         layout:false,
-        data:{
-            user:accounts.user,
-            emailAddress:accounts.emailAddress,
-            FirstName:accounts.fName,
-            LastName:accounts.lName,
-        }
+        data:req.testCookie.userInfo
+       // data:{
+       //     user:accounts.user,
+       //     emailAddress:accounts.emailAddress,
+       //     FirstName:accounts.fName,
+       //     LastName:accounts.lName,
+       // }
      })
 }
 else
 {
+    req.testCookie.userInfo={
+        value1:false
+    }
 res.render('dashboard',{
+    
     layout:false,
     data:{
         user:accounts.user,
@@ -197,8 +250,6 @@ res.render('dashboard',{
         password:passWord,
         invalid:true
     }
-    console.log(someData);
-   // res.redirect('/login');
    res.render('login',{
         data:someData,
         layout:false
@@ -208,9 +259,131 @@ res.render('dashboard',{
 )
 }
 )
+app.post("/updateFile",function(req,res)
+{
+    
+    var body=req.body;
+    console.log(req.body);
+    if (req.body!=undefined)
+    {
+       
+    Article.updateOne(
+        {id:body.id},
+        {$set: {title:body.title,date:body.date,article:body.content,imageName:body.image}}
+        ).exec().then(()=>{
+            if (body.content==undefined)
+            {
+                body.content="";
+            }
+            Blog.updateOne(
+                {id:body.id},
+                {$set: {title:body.title,date:body.date,article:body.content.substr(0,250),imageName:body.image}}
+            ).exec().then(()=>{
+
+            });
+        });
+    }
+    res.render("admindashboard",{layout:false,data:req.testCookie.userInfo})
+})
+app.post("/viewFiles",function(req,res)
+{
+    Article.find().exec().then((sandwiches)=>
+    {
+    sandwiches=sandwiches.map(value=>value.toObject());
+    res.render("admindashboard",{        layout:false,
+        data:req.testCookie.userInfo,
+        articles:sandwiches
+    });
+});
+});
+app.post("/addFile",upload.single("photo"),function(req,res){
+    const formData = req.body;
+    const formFile = req.file;
+    console.log(formFile);
+    //console.log(formFile.title);
+    console.log(formData)
+    console.log(formData);
+    console.log(formData.content);
+
+    Article.find().sort({id:-1}).limit(1).exec().then((accounts)=>
+    {
+        articleContent=formData.content.substr(0,250);
+        var newBlog= new Blog({
+            title:formData.title,
+            createdDate:formData.date,
+            article:articleContent,
+            id:accounts[0].id+1,
+        })
+        var newArticle= new Article({
+            title:formData.title,
+            createdDate:formData.date,
+            article:formData.content,
+            id:accounts[0].id+1,
+        });
+        console.log("FormFile")
+        console.log(formFile);
+
+        if (formFile!=undefined)
+        {
+            newArticle.imageName=formFile.filename;
+            newBlog.imageName=formFile.filename;
+        }
+        const user=req.testCookie.userInfo.user;
+        const email=req.testCookie.userInfo.emailAddress;
+        const fName=req.testCookie.userInfo.FirstName;
+        const lName=req.testCookie.userInfo.LastName;
+        console.log(newArticle);
+        newArticle.save().then((saving)=>
+        {
+        newBlog.save().then((saving)=>{
 
 
+           
+       
+   
+  //  console.log(id);
+    //console.log(path.extname(formFile.filename));
+    /*db.collection.find().sort({age:-1}).limit(1)
+    const dataReceived = "Your submission was received:<br/><br/>" +
+      "Your form data was:<br/>" + JSON.stringify(formData) + "<br/><br/>" +
+      "Your File data was:<br/>" + JSON.stringify(formFile) +
+      "<br/><p>This is the image you sent:<br/><img src='/images/" + formFile.filename + "'/>"+
+      "<br/><p>Help!<img src='iconsmall.png'/>";
+    console.log(formFile.filename);
+    console.log(dataReceived);
+    res.send(dataReceived);
+    */
 
+    if (formFile!=undefined)
+    {
+        req.testCookie.userInfo={
+            admin:true,
+            user:user,
+            emailAddress:email,
+            FirstName:fName,
+            LastName:lName
+        }
+        
+    }
+
+    console.log(req.testCookie.userInfo.user);
+    console.log(req.testCookie.userInfo);
+   res.render("admindashboard",{        layout:false,
+    data:req.testCookie.userInfo
+});
+});
+});
+});
+  // res.send("Apple");
+})
+app.get("/images/:id",function(req,res)
+{
+    res.sendFile(path.join(__dirname,"/images/"+req.params.id));
+})
+app.get("/articles/images/:id",function(req,res)
+{
+    res.sendFile(path.join(__dirname,"/images/"+req.params.id));
+})
  app.post("/registration",function(req,res){    
     var username=req.body.username;
     var password=req.body.password;
@@ -265,21 +438,6 @@ res.render('dashboard',{
         valid=false;
         phoneValid=false;
     }
-
-/*
-    console.log("Valid =" + valid);
-    console.log(email);
-    console.log(firstName);
-    console.log(lastName);
-    console.log(phone);
-    console.log(companyName);
-    console.log(address1);
-    console.log(address2);
-    console.log(username);
-    console.log(password);
-    console.log(userValid);
-    console.log(passValid);
-    */
     var someData={
         phoneNum:phone,
         validPhone:!phoneValid,
@@ -314,15 +472,10 @@ res.render('dashboard',{
             accounts=accounts.map(value => value.toObject());
             if (accounts[0]!=undefined)
             {
-            console.log("ACCOUNT FOUND="+accounts[0].user);
-            //console.log(accounts);
-            console.log(accounts[0].user);
             if (accounts[0].user!=undefined)
             {
-                console.log("AccountValue="+accounts[0].user);
                 usernameError=true;
                 someData.usernameError=true;
-                console.log(someData.usernameError);
             }
         }
         }
@@ -334,32 +487,22 @@ res.render('dashboard',{
             accounts=accounts.map(value=>value.toObject());
             if (accounts[0]!=undefined)
             {
-            console.log("Email FOUND="+accounts[0].emailAddress);
-            //console.log(accounts.emailAddress);
             if (accounts[0].emailAddress!=undefined)
             {
-                console.log("EmailValue");
                 emailError=true;
             }
         }
         }).catch()
         account.save().then(()=>{
-            console.log(account);
         }).catch(err=>{
-            //JUST DO IT RIGHT EVEN IF ITS REALLY ANNOYING TO DO RIGHT
             valid=false;
-            console.log("valid="+valid);
             someData.usernameError=usernameError;
             someData.emailError=emailError;
-            console.log(someData);
-            console.log(usernameError+"= UsernameError");
             res.render('registration',{
                 data:someData,
                 layout:false
                 })
-           // res.redirect('/blog');
         });
-    //Send data to database.
     }
     else
     {
@@ -368,8 +511,6 @@ res.render('dashboard',{
             layout:false
         })
     }
-   // console.log(someData);
-   console.log("Moving to Dashboard");
     res.render('dashboard',{
     data:someData,
     layout:false})
@@ -382,14 +523,13 @@ app.get("/twitter",function(req,res){
     res.sendFile(path.join(__dirname,"Tweeter.png"));
 })
 app.get("/article/:id",function(req,res){
-    console.log(req.params);
-    console.log(req.params.id);
     var someData
     Article.find({id:req.params.id}).exec().then((article)=> {
         article = article.map(value => value.toObject());
-        //console.log(article);
         someData=article[0];
-       // console.log(someData);
+        console.log(someData.imageName);
+        someData.imageName="/images/"+someData.imageName;
+        console.log(someData.imageName);
         res.render('article',{
             data:someData,
             layout:false
@@ -398,20 +538,6 @@ app.get("/article/:id",function(req,res){
 
     //res.sendFile(path.join(__dirname,("article"+req.params.id+".html")));
 })
-/*
-app.get("/article/1",function(req,res){
-    res.sendFile(path.join(__dirname,"article1.html"));
-})
-app.get("/article/2",function(req,res){
-    res.sendFile(path.join(__dirname,"article2.html"));
-})
-app.get("/article/3",function(req,res){
-    res.sendFile(path.join(__dirname,"article3.html"));
-})
-/*app.use((req, res) => {
-   res.redirect('/');
-  });
-*/
 // setup http server to listen on HTTP_PORT
 app.listen(HTTP_PORT);
 //sequelizer object .sync().then(() => {
