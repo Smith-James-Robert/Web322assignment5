@@ -16,7 +16,7 @@ const { nextTick } = require("process");
 app.use(express.urlencoded({ extended: true }));
 
 const storage = multer.diskStorage({
-    destination: "./images/",
+    destination: "/tmp/images/",
     filename: function (req, file, cb) {
       // we write the filename as the current date down to the millisecond
       // in a large web service this would possibly cause a problem if two people
@@ -261,7 +261,7 @@ res.render('dashboard',{
 )
 app.post("/updateFile",function(req,res)
 {
-    
+        
     var body=req.body;
     console.log(req.body);
     if (req.body!=undefined)
