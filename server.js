@@ -537,7 +537,7 @@ app.get("/article/:id",function(req,res){
         console.log(someData.imageName);
         if (someData.tmpImage)
         {
-            someData.imageName="../tmp/"+someData.imageName;
+            someData.imageName="/tmp/"+someData.imageName;
         }
         else
         {
