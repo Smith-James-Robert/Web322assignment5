@@ -9,6 +9,8 @@ const e = require("express");
 var qs = require('qs');
 const exphbs = require('express-handlebars');
 const mongoose = require('mongoose');
+const AWS = require("aws-sdk");
+const s3 = new AWS.S3()
 var hash=require('object-hash'); // This is apparently not a very good hash but I don't know how to implment any others and couldn't find that information in the course notes.
 const clientSessions= require("client-sessions");
 const { nextTick } = require("process");
@@ -298,7 +300,7 @@ app.post("/viewFiles",function(req,res)
     });
 });
 });
-app.post("/addFile",upload.single("photo"),function(req,res){
+app.post("/addFile",upload.single("photo"),async(req,res){
     const formData = req.body;
     const formFile = req.file;
     console.log(formFile);
@@ -331,6 +333,13 @@ app.post("/addFile",upload.single("photo"),function(req,res){
         {
             newArticle.imageName=formFile.filename;
             newBlog.imageName=formFile.filename;
+            const uploadedImage =await s3.upload({
+                Bucket: process.env.BUCKET,
+                Key: formFile.originalname,
+                Body: blob,
+              }).promise()
+              console.log(uploadImage);
+              console.log(uploadedImage.Location);
         }
         const user=req.testCookie.userInfo.user;
         const email=req.testCookie.userInfo.emailAddress;
@@ -537,7 +546,7 @@ app.get("/article/:id",function(req,res){
         console.log(someData.imageName);
         if (someData.tmpImage)
         {
-            someData.imageName="/tmp/"+someData.imageName;
+            someData.imageName="/images/"+someData.imageName;
         }
         else
         {
