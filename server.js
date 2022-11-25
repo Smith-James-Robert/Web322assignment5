@@ -300,7 +300,7 @@ app.post("/viewFiles",function(req,res)
     });
 });
 });
-app.post("/addFile",upload.single("photo"),async(req,res){
+app.post("/addFile",upload.single("photo"),async(req,res) =>{
     const formData = req.body;
     const formFile = req.file;
     console.log(formFile);
@@ -308,6 +308,14 @@ app.post("/addFile",upload.single("photo"),async(req,res){
     console.log(formData)
     console.log(formData);
     console.log(formData.content);
+
+        const uploadedImage =  await s3.upload({
+            Bucket: process.env.BUCKET,
+            Key: formFile.originalname,
+            Body: blob,
+          }).promise()
+          console.log(uploadImage);
+          console.log(uploadedImage.Location);
 
     Article.find().sort({id:-1}).limit(1).exec().then((accounts)=>
     {
@@ -328,18 +336,10 @@ app.post("/addFile",upload.single("photo"),async(req,res){
         });
         console.log("FormFile")
         console.log(formFile);
-
         if (formFile!=undefined)
         {
             newArticle.imageName=formFile.filename;
             newBlog.imageName=formFile.filename;
-            const uploadedImage =await s3.upload({
-                Bucket: process.env.BUCKET,
-                Key: formFile.originalname,
-                Body: blob,
-              }).promise()
-              console.log(uploadImage);
-              console.log(uploadedImage.Location);
         }
         const user=req.testCookie.userInfo.user;
         const email=req.testCookie.userInfo.emailAddress;
