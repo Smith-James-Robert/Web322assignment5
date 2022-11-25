@@ -101,6 +101,7 @@ var blogSchema = new Schema ({
     "title":String,
     "article":String,
     "imageName":String,
+    "tmpImage":Boolean,
     "id":{
         "type":Number,
         "unique":true
@@ -111,6 +112,7 @@ var articleSchema = new Schema ({
     "createdDate":Date,
     "article":String,
     "imageName":String,
+    "tmpImage":Boolean,
     "id":{
         "type":Number,
         "unique":true
@@ -312,12 +314,14 @@ app.post("/addFile",upload.single("photo"),function(req,res){
             title:formData.title,
             createdDate:formData.date,
             article:articleContent,
+            tmpImage:true,
             id:accounts[0].id+1,
         })
         var newArticle= new Article({
             title:formData.title,
             createdDate:formData.date,
             article:formData.content,
+            tmpImage:true,
             id:accounts[0].id+1,
         });
         console.log("FormFile")
@@ -375,6 +379,9 @@ app.post("/addFile",upload.single("photo"),function(req,res){
 });
 });
   // res.send("Apple");
+})
+app.get("/tmp/:id",function(req,res){
+res.sendFile(path.join(__dirname,"/tmp/"+req.params.id))
 })
 app.get("/images/:id",function(req,res)
 {
@@ -528,7 +535,15 @@ app.get("/article/:id",function(req,res){
         article = article.map(value => value.toObject());
         someData=article[0];
         console.log(someData.imageName);
-        someData.imageName="/images/"+someData.imageName;
+        if (someData.tmpImage)
+        {
+            someData.imageName="tmp/"+someData.imageName;
+        }
+        else
+        {
+            someData.imageName="/images/"+someData.imageName;
+        }
+       
         console.log(someData.imageName);
         res.render('article',{
             data:someData,
